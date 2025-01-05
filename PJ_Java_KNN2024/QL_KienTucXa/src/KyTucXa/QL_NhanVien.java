@@ -6,7 +6,7 @@ import DTOs.NhanVienDAO;
 import DTOs.VaiTroDAO;  // Lớp quản lý vai trò
 import Data.NhanVien;
 import Data.VaiTro;  // Lớp vai trò
-import at.favre.lib.crypto.bcrypt.BCrypt;
+//import at.favre.lib.crypto.bcrypt.BCrypt;
 import java.awt.*;
 import java.sql.Timestamp;
 import java.util.List;
