@@ -108,6 +108,34 @@ public class NhanVienDAO {
             logError(e, "Error deleting employee");
         }
     }
+    
+    // ho tro dang nhap
+    public static NhanVien getNhanVienByEmail(String email) {
+        NhanVien nhanVien = null;
+        String query = "SELECT email, pass_word FROM nhan_vien WHERE email = ?"; // Kiểm tra tên cột
+
+        try (Connection connection = DatabaseConnection.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            
+            preparedStatement.setString(1, email);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String emailResult = resultSet.getString("email");
+                String passWordResult = resultSet.getString("pass_word");
+
+                // Kiểm tra nếu dữ liệu có thực sự có
+                if (emailResult != null && passWordResult != null) {
+                    // Tạo đối tượng NhanVien với email và mật khẩu
+                    nhanVien = new NhanVien(emailResult, passWordResult);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return nhanVien;
+    }
+    
 
     // Logging utility
     private static void logError(Exception e, String message) {

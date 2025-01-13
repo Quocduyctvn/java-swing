@@ -23,6 +23,11 @@ public class NhanVien {
         this.vaiTroId = vaiTroId;
     }
 
+    public NhanVien(String email, String matKhau) {
+        this.email = email;
+        this.matKhau = matKhau;
+    }
+
     // Getter and Setter Methods
     public String getId() {
         return id;
