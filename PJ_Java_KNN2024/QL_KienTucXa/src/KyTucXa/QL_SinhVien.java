@@ -25,6 +25,17 @@ public class QL_SinhVien extends JFrame {
 
         // ======= PANEL HEADER =======
         JPanel panelHeader = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("Quản lý danh sách Sinh viên", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+
+        // Add margin-bottom to title
+        JPanel titlePanel = new JPanel();
+        titlePanel.add(titleLabel);
+        titlePanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 15, 30)); // Add margin-bottom of 30px
+
+        // Add titlePanel to NORTH of the BorderLayout
+        panelHeader.add(titlePanel, BorderLayout.NORTH);  // Changed from CENTER to NORTH
+
         btnThemMoi = new JButton("+ Thêm mới sinh viên");
         btnThemMoi.setForeground(Color.WHITE);
         btnThemMoi.setBackground(new Color(33, 150, 243));
@@ -46,8 +57,10 @@ public class QL_SinhVien extends JFrame {
         panelSearch.add(txtTimKiem);
         panelSearch.add(btnTimKiem);
 
+        // Add the top buttons and search panel to WEST and EAST respectively
         panelHeader.add(panelTopButtons, BorderLayout.WEST);
         panelHeader.add(panelSearch, BorderLayout.EAST);
+
 
         // ======= TABLE =======
         tableModel = new DefaultTableModel(new String[]{
