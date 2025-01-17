@@ -9,12 +9,12 @@ import java.sql.*;
 public class QL_Lop extends JFrame {
     private JTextField txtTimKiem;
     private JButton btnSua, btnXoa, btnLamMoi, btnTimKiem, btnThemMoi;
-    private JButton btnPrevPage, btnNextPage;
+    private JLabel totalLabel, pageLabel;
+    private JButton nextButton, prevButton;
     private JTable table;
     private DefaultTableModel tableModel;
     private Connection conn;
 
-    // Phân trang
     private int currentPage = 1;
     private final int rowsPerPage = 5;
     private int totalPages;
@@ -25,127 +25,148 @@ public class QL_Lop extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Kết nối cơ sở dữ liệu
         connectDatabase();
-
-        // ======= PANEL HEADER =======
-        JPanel panelHeader = new JPanel(new BorderLayout());
-        JPanel panelLeft = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel panelCenter = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JPanel panelRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-
-        btnThemMoi = new JButton("+ Thêm mới lớp");
-        btnThemMoi.setForeground(Color.WHITE);
-        btnThemMoi.setBackground(new Color(33, 150, 243));
-
-        txtTimKiem = new JTextField(20);
-        btnTimKiem = new JButton("Tìm Kiếm");
-
-        btnSua = new JButton("Sửa");
-        btnXoa = new JButton("Xóa");
-        btnLamMoi = new JButton("Làm mới");
-
-        panelLeft.add(btnThemMoi);
-        panelCenter.add(btnSua);
-        panelCenter.add(btnXoa);
-        panelCenter.add(btnLamMoi);
-        panelRight.add(txtTimKiem);
-        panelRight.add(btnTimKiem);
-
-        panelHeader.add(panelLeft, BorderLayout.WEST);
-        panelHeader.add(panelCenter, BorderLayout.CENTER);
-        panelHeader.add(panelRight, BorderLayout.EAST);
-
-        // ======= TABLE =======
-        tableModel = new DefaultTableModel(new String[]{"STT", "ID", "Tên Lớp", "Mô Tả", "Ngày Tạo", "Ngày Cập Nhật"}, 0);
-        table = new JTable(tableModel);
-        JScrollPane tableScrollPane = new JScrollPane(table);
-
-        // ======= PAGINATION =======
-        JPanel panelPagination = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        btnPrevPage = new JButton("<");
-        btnNextPage = new JButton(">");
-        panelPagination.add(btnPrevPage);
-        panelPagination.add(btnNextPage);
-
-        // Tải dữ liệu từ database
+        initComponents();
         calculateTotalPages();
         loadTableData();
         hideColumn(1); // Ẩn cột ID
-
-        // ======= MAIN LAYOUT =======
-        setLayout(new BorderLayout(5, 5));
-        add(panelHeader, BorderLayout.NORTH);
-        add(tableScrollPane, BorderLayout.CENTER);
-        add(panelPagination, BorderLayout.SOUTH);
-
-        // ======= EVENTS =======
-        btnThemMoi.addActionListener(e -> openAddOrEditForm(null));
-        btnSua.addActionListener(e -> editSelectedRow());
-        btnXoa.addActionListener(e -> deleteRecord());
-        btnLamMoi.addActionListener(e -> {
-            currentPage = 1;
-            loadTableData();
-        });
-        btnTimKiem.addActionListener(e -> searchRecord());
-        
-        btnPrevPage.addActionListener(e -> {
-            if (currentPage > 1) {
-                currentPage--;
-                loadTableData();
-                System.out.println("Trang hiện tại: " + currentPage); // Kiểm tra giá trị
-            }
-        });
-        btnNextPage.addActionListener(e -> {
-            if (currentPage < totalPages) {
-                currentPage++;
-                loadTableData();
-                System.out.println("Trang hiện tại: " + currentPage); // Kiểm tra giá trị
-            }
-        });
     }
 
-    // ======= Kết nối Database =======
     private void connectDatabase() {
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/qldk_ktx", "root", "quocduy0");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/qldk_ktx",  "root", "quocduy0");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Kết nối cơ sở dữ liệu thất bại!");
             e.printStackTrace();
         }
     }
 
-    // ======= Tính tổng số trang =======
+private void initComponents() {
+    // Header panel
+    JPanel panelHeader = new JPanel(new BorderLayout(5, 5));
+    JPanel panelLeft = new JPanel(new FlowLayout(FlowLayout.LEFT));
+    JPanel panelRight = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    
+    // Add a title label to the header
+    JLabel headerLabel = new JLabel("Quản lý danh sách lớp học");
+    headerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+    headerLabel.setHorizontalAlignment(SwingConstants.CENTER);
+    panelHeader.add(headerLabel, BorderLayout.NORTH);
+
+    // Add buttons and search bar to the header
+    btnThemMoi = new JButton("+ Thêm mới lớp");
+    txtTimKiem = new JTextField(20);
+    btnTimKiem = new JButton("Tìm Kiếm");
+    btnSua = new JButton("Sửa");
+    btnXoa = new JButton("Xóa");
+    btnLamMoi = new JButton("Làm mới");
+
+    panelLeft.add(btnThemMoi);
+    panelRight.add(txtTimKiem);
+    panelRight.add(btnTimKiem);
+    panelRight.add(btnSua);
+    panelRight.add(btnXoa);
+    panelRight.add(btnLamMoi);
+    panelHeader.add(panelLeft, BorderLayout.WEST);
+    panelHeader.add(panelRight, BorderLayout.EAST);
+
+    // Table
+    tableModel = new DefaultTableModel(new String[]{"STT", "ID", "Tên Lớp", "Mô Tả", "Ngày Tạo", "Ngày Cập Nhật"}, 0);
+    table = new JTable(tableModel);
+    JScrollPane tableScrollPane = new JScrollPane(table);
+
+    // Pagination panel
+    JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    totalLabel = new JLabel("Tổng: 0 bản ghi");
+    prevButton = new JButton("<<");
+    nextButton = new JButton(">>");
+    pageLabel = new JLabel("Trang 1");
+
+    bottomPanel.add(totalLabel);
+    bottomPanel.add(prevButton);
+    bottomPanel.add(pageLabel);
+    bottomPanel.add(nextButton);
+
+    prevButton.addActionListener(e -> navigatePage(-1));
+    nextButton.addActionListener(e -> navigatePage(1));
+
+    btnThemMoi.addActionListener(e -> openAddOrEditForm(null));
+    btnSua.addActionListener(e -> editSelectedRow());
+    btnXoa.addActionListener(e -> deleteRecord());
+    btnLamMoi.addActionListener(e -> refreshTable());
+    btnTimKiem.addActionListener(e -> searchRecord());
+
+    // Set layout and add components
+    setLayout(new BorderLayout(5, 5));
+    add(panelHeader, BorderLayout.NORTH);
+    add(tableScrollPane, BorderLayout.CENTER);
+    add(bottomPanel, BorderLayout.SOUTH);
+}
+
+    
+    
+    private void navigatePage(int direction) {
+        int nextPage = currentPage + direction;
+        if (nextPage > 0 && nextPage <= totalPages) {
+            currentPage = nextPage;
+            loadTableData();
+        }
+    }
+
     private void calculateTotalPages() {
-        try {
-            String sql = "SELECT COUNT(*) FROM lop";
-            PreparedStatement ps = conn.prepareStatement(sql);
+        try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) FROM lop")) {
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 int totalRows = rs.getInt(1);
                 totalPages = (int) Math.ceil((double) totalRows / rowsPerPage);
+                totalLabel.setText("Tổng: " + totalRows + " bản ghi");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    // Ẩn cột ID
+    private void loadTableData() {
+        tableModel.setRowCount(0);
+        try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM lop LIMIT ? OFFSET ?")) {
+            ps.setInt(1, rowsPerPage);
+            ps.setInt(2, (currentPage - 1) * rowsPerPage);
+            ResultSet rs = ps.executeQuery();
+            int stt = (currentPage - 1) * rowsPerPage + 1;
+            while (rs.next()) {
+                tableModel.addRow(new Object[]{
+                        stt++,
+                        rs.getInt("id"),
+                        rs.getString("ten_lop"),
+                        rs.getString("mo_ta"),
+                        rs.getTimestamp("ngay_tao"),
+                        rs.getTimestamp("ngay_cap_nhat")
+                });
+            }
+            pageLabel.setText("Trang " + currentPage + " / " + totalPages);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void hideColumn(int columnIndex) {
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.removeColumn(columnModel.getColumn(columnIndex));
     }
 
-    // ======= Load Dữ Liệu =======
-    private void loadTableData() {
+    private void refreshTable() {
+        currentPage = 1;
+        calculateTotalPages();
+        loadTableData();
+    }
+
+    private void searchRecord() {
+        String keyword = txtTimKiem.getText().trim().toLowerCase();
         tableModel.setRowCount(0);
-        try {
-            String sql = "SELECT * FROM lop LIMIT ? OFFSET ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, rowsPerPage);
-            ps.setInt(2, (currentPage - 1) * rowsPerPage);
+        try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM lop WHERE LOWER(ten_lop) LIKE ?")) {
+            ps.setString(1, "%" + keyword + "%");
             ResultSet rs = ps.executeQuery();
-            int stt = (currentPage - 1) * rowsPerPage + 1; // STT theo trang
+            int stt = 1;
             while (rs.next()) {
                 tableModel.addRow(new Object[]{
                         stt++,
@@ -160,6 +181,8 @@ public class QL_Lop extends JFrame {
             e.printStackTrace();
         }
     }
+    
+    
     private void openAddOrEditForm(Integer selectedId) {
         JDialog dialog = new JDialog(this, selectedId == null ? "Thêm Mới Lớp" : "Cập Nhật Lớp", true);
         dialog.setSize(400, 200);
@@ -229,33 +252,6 @@ public class QL_Lop extends JFrame {
         // Mở form thêm/sửa với ID đã chọn
         openAddOrEditForm(id);
     }
-
-    // ======= Tìm Kiếm Dữ Liệu =======
-    private void searchRecord() {
-        String keyword = txtTimKiem.getText().trim().toLowerCase();
-        tableModel.setRowCount(0);
-        try {
-            String sql = "SELECT * FROM lop WHERE LOWER(ten_lop) LIKE ?";
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setString(1, "%" + keyword + "%");
-            ResultSet rs = ps.executeQuery();
-            int stt = 1;
-            while (rs.next()) {
-                tableModel.addRow(new Object[]{
-                        stt++,
-                        rs.getInt("id"),
-                        rs.getString("ten_lop"),
-                        rs.getString("mo_ta"),
-                        rs.getTimestamp("ngay_tao"),
-                        rs.getTimestamp("ngay_cap_nhat")
-                });
-            }
-        } catch (SQLException e) {
-        	JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     // ======= Xóa Dữ Liệu =======
     private void deleteRecord() {
         int selectedRow = table.getSelectedRow();
