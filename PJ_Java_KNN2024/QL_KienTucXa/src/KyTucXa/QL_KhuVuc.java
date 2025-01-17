@@ -19,94 +19,105 @@ public class QL_KhuVuc extends JFrame {
     private int rowsPerPage = 10;
     private int totalPages;
 
-    public QL_KhuVuc() {
-        setTitle("Quản Lý Khu Vực");
-        setSize(800, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+public QL_KhuVuc() {
+    setTitle("Quản Lý Khu Vực");
+    setSize(800, 500);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    setLocationRelativeTo(null);
 
-        // ======= Kết nối Database =======
-        connectDatabase();
+    // ======= Kết nối Database =======
+    connectDatabase();
 
-        // ======= PANEL HEADER =======
-        JPanel panelHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+    // ======= LABEL TIÊU ĐỀ =======
+    JLabel lblTitle = new JLabel("Quản Lý Khu Vực");
+    lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
+    lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // ======= BUTTONS THÊM, SỬA, XÓA, LÀM MỚI =======
-        JButton btnThemMoi = new JButton("+ Thêm mới khu vực");
-        JButton btnSua = new JButton("Sửa");
-        JButton btnXoa = new JButton("Xóa");
-        btnLamMoi = new JButton("Làm mới");
+    // ======= PANEL HEADER =======
+    JPanel panelHeader = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
 
-        // ======= Tìm kiếm =======
-        txtTimKiem = new JTextField(20);
-        btnTimKiem = new JButton("Tìm Kiếm");
+    // ======= BUTTONS THÊM, SỬA, XÓA, LÀM MỚI =======
+    JButton btnThemMoi = new JButton("+ Thêm mới khu vực");
+    JButton btnSua = new JButton("Sửa");
+    JButton btnXoa = new JButton("Xóa");
+    btnLamMoi = new JButton("Làm mới");
 
-        // Thêm tất cả vào panelHeader (một hàng duy nhất)
-        panelHeader.add(btnThemMoi);
-        panelHeader.add(btnSua);
-        panelHeader.add(btnXoa);
-        panelHeader.add(btnLamMoi);
-        panelHeader.add(txtTimKiem);
-        panelHeader.add(btnTimKiem);  // Thêm btnTimKiem vào panel
+    // ======= Tìm kiếm =======
+    txtTimKiem = new JTextField(20);
+    btnTimKiem = new JButton("Tìm Kiếm");
 
-        // ======= BUTTONS PHÂN TRANG =======
-        JButton btnFirstPage = new JButton("Trang đầu");
-        JButton btnPrevPage = new JButton("<<");
-        JButton btnNextPage = new JButton(">>");
-        JLabel lblPageInfo = new JLabel("Trang: " + currentPage);
+    // Thêm tất cả vào panelHeader
+    panelHeader.add(btnThemMoi);
+    panelHeader.add(btnSua);
+    panelHeader.add(btnXoa);
+    panelHeader.add(btnLamMoi);
+    panelHeader.add(txtTimKiem);
+    panelHeader.add(btnTimKiem);
 
-        JPanel panelPagination = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelPagination.add(btnFirstPage);
-        panelPagination.add(btnPrevPage);
-        panelPagination.add(lblPageInfo);
-        panelPagination.add(btnNextPage);
+    // ======= BUTTONS PHÂN TRANG =======
+    JButton btnFirstPage = new JButton("Trang đầu");
+    JButton btnPrevPage = new JButton("<<");
+    JButton btnNextPage = new JButton(">>");
+    JLabel lblPageInfo = new JLabel("Trang: " + currentPage);
 
-        // ======= TABLE =======
-        tableModel = new DefaultTableModel(new String[]{"STT", "ID", "Tên Khu Vực", "Vị Trí", "Mô Tả", "Ngày Tạo", "Ngày Cập Nhật"}, 0);
-        table = new JTable(tableModel);
-        JScrollPane tableScrollPane = new JScrollPane(table);
+    JPanel panelPagination = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    panelPagination.add(btnFirstPage);
+    panelPagination.add(btnPrevPage);
+    panelPagination.add(lblPageInfo);
+    panelPagination.add(btnNextPage);
 
-        // Load dữ liệu
+    // ======= TABLE =======
+    tableModel = new DefaultTableModel(new String[]{"STT", "ID", "Tên Khu Vực", "Vị Trí", "Mô Tả", "Ngày Tạo", "Ngày Cập Nhật"}, 0);
+    table = new JTable(tableModel);
+    JScrollPane tableScrollPane = new JScrollPane(table);
+
+    // Load dữ liệu
+    loadTableData();
+    hideColumn(1); // Ẩn cột ID
+
+    // ======= GỘP HEADER VÀ TABLE =======
+    JPanel panelCenter = new JPanel(new BorderLayout());
+    panelCenter.add(panelHeader, BorderLayout.NORTH);  // Thêm panelHeader vào phía trên
+    panelCenter.add(tableScrollPane, BorderLayout.CENTER);  // Thêm bảng vào phía dưới
+
+    // ======= MAIN LAYOUT =======
+    setLayout(new BorderLayout(5, 5));
+    add(lblTitle, BorderLayout.NORTH); // Đặt tiêu đề lên trên cùng
+    add(panelCenter, BorderLayout.CENTER); // Đặt panelCenter vào trung tâm
+    add(panelPagination, BorderLayout.SOUTH); // Đặt panelPagination ở phía dưới
+
+    // ======= EVENTS =======
+    btnThemMoi.addActionListener(e -> openAddOrEditForm(null));
+    btnSua.addActionListener(e -> editSelectedRow());
+    btnXoa.addActionListener(e -> deleteSelectedRow());
+    btnLamMoi.addActionListener(e -> loadTableData());
+    btnTimKiem.addActionListener(e -> searchRecord());
+
+    // Sự kiện phân trang
+    btnPrevPage.addActionListener(e -> {
+        if (currentPage > 1) {
+            currentPage--;
+            lblPageInfo.setText("Trang: " + currentPage);
+            loadTableData();
+        }
+    });
+
+    btnNextPage.addActionListener(e -> {
+        if (currentPage < totalPages) {
+            currentPage++;
+            lblPageInfo.setText("Trang: " + currentPage);
+            loadTableData();
+        }
+    });
+
+    btnFirstPage.addActionListener(e -> {
+        currentPage = 1;
+        lblPageInfo.setText("Trang: " + currentPage);
         loadTableData();
-        hideColumn(1); // Ẩn cột ID
-
-        // ======= MAIN LAYOUT =======
-        setLayout(new BorderLayout(5, 5));
-        add(panelHeader, BorderLayout.NORTH);  // Đặt panelHeader lên đầu tiên
-        add(tableScrollPane, BorderLayout.CENTER);
-        add(panelPagination, BorderLayout.SOUTH); // Đặt panelPagination ở phía dưới
-
-        // ======= EVENTS =======
-        btnThemMoi.addActionListener(e -> openAddOrEditForm(null));
-        btnSua.addActionListener(e -> editSelectedRow());
-        btnXoa.addActionListener(e -> deleteSelectedRow());
-        btnLamMoi.addActionListener(e -> loadTableData());
-        btnTimKiem.addActionListener(e -> searchRecord());
-
-        // Sự kiện phân trang
-        btnPrevPage.addActionListener(e -> {
-            if (currentPage > 1) {  // Nếu không phải trang 1
-                currentPage--;  // Giảm số trang khi nhấn "Prev"
-                lblPageInfo.setText("Trang: " + currentPage);  // Cập nhật số trang trên giao diện
-                loadTableData();  // Tải lại dữ liệu của trang mới
-            }
-        });
-
-        btnNextPage.addActionListener(e -> {
-            if (currentPage < totalPages) {  // Nếu không phải trang cuối
-                currentPage++;  // Tăng số trang khi nhấn "Next"
-                lblPageInfo.setText("Trang: " + currentPage);  // Cập nhật số trang trên giao diện
-                loadTableData();  // Tải lại dữ liệu của trang mới
-            }
-        });
-        
-        btnFirstPage.addActionListener(e -> {
-            currentPage = 1;  // Đặt lại trang về 1
-            lblPageInfo.setText("Trang: " + currentPage);  // Cập nhật số trang trên giao diện
-            loadTableData();  // Tải lại dữ liệu của trang 1
-        });
-    }
-
+    });
+}
+  
+    
     // ======= Ẩn Cột =======
     private void hideColumn(int columnIndex) {
         TableColumnModel columnModel = table.getColumnModel();
