@@ -32,7 +32,7 @@ public class QL_VaiTro extends JFrame {
         initComponents();
         loadVaiTroData();
 
-        setSize(800, 500);
+        setSize(900, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -226,76 +226,78 @@ public class QL_VaiTro extends JFrame {
     }
     
     
-private void manageRolePermissions() {
-    // Lấy chỉ số hàng đã chọn trong bảng
-    int selectedRow = table.getSelectedRow();
-    if (selectedRow == -1) {
-        // Hiển thị thông báo nếu không có vai trò nào được chọn
-        JOptionPane.showMessageDialog(this, "Vui lòng chọn một vai trò để quản lý quyền.");
-        return;
-    }
-
-    // Lấy thông tin vai trò đã chọn từ danh sách
-    VaiTro selectedVaiTro = dataList.get(selectedRow);
-
-    // Tạo đối tượng QuyenDAO để tương tác với cơ sở dữ liệu
-    QuyenDAO quyenDAO = new QuyenDAO(DatabaseConnection.getConnection()); // Sử dụng kết nối cơ sở dữ liệu
-
-    // Lấy tất cả các quyền có sẵn trong cơ sở dữ liệu
-    List<Quyen> allPermissions = quyenDAO.getAllQuyen();
-    
-    // Lấy tất cả các quyền đã liên kết với vai trò này từ cơ sở dữ liệu
-    List<Quyen> selectedPermissions = quyenDAO.getPermissionsByVaiTroId(selectedVaiTro.getId());
-    
-    // Tạo một Map để lưu các checkbox theo ID quyền
-    Map<Integer, JCheckBox> checkBoxMap = new HashMap<>();
-    
-    // Tạo một JPanel để chứa các checkbox
-    JPanel panel = new JPanel(new GridLayout(allPermissions.size(), 1));
-
-    // Duyệt qua tất cả các quyền và tạo checkbox
-    for (Quyen permission : allPermissions) {
-        JCheckBox checkBox = new JCheckBox(permission.getTenQuyen());
-        
-        // Nếu quyền đã được liên kết với vai trò này, chọn checkbox
-        boolean isSelected = selectedPermissions.stream().anyMatch(p -> p.getId() == permission.getId());
-        checkBox.setSelected(isSelected);
-
-        // Thêm checkbox vào Map và panel
-        checkBoxMap.put(permission.getId(), checkBox);
-        panel.add(checkBox);
-    }
-
-    // Hiển thị panel trong một hộp thoại để người dùng quản lý quyền
-    int option = JOptionPane.showConfirmDialog(this, new JScrollPane(panel), "Quản lý Quyền Vai Trò", JOptionPane.OK_CANCEL_OPTION);
-
-    // Nếu người dùng nhấn OK, xử lý việc cập nhật quyền
-    if (option == JOptionPane.OK_OPTION) {
-        List<Integer> selectedPermissionIds = new ArrayList<>();
-        
-        // Thu thập các ID quyền đã được chọn
-        for (Map.Entry<Integer, JCheckBox> entry : checkBoxMap.entrySet()) {
-            if (entry.getValue().isSelected()) {
-                selectedPermissionIds.add(entry.getKey());
-            }
-        }
-
-        // Cập nhật quyền cho vai trò trong cơ sở dữ liệu
-        boolean success = quyenDAO.updatePermissionsForVaiTro(selectedVaiTro.getId(), selectedPermissionIds);
-        
-        // Hiển thị thông báo kết quả cập nhật
-        if (success) {
-            JOptionPane.showMessageDialog(this, "Cập nhật quyền thành công.");
-        } else {
-            JOptionPane.showMessageDialog(this, "Cập nhật quyền thất bại.");
-        }
-    }
-}
-
-
-
-
-    public static void main(String[] args) {
+	private void manageRolePermissions() {
+	    // Lấy chỉ số hàng đã chọn trong bảng
+	    int selectedRow = table.getSelectedRow();
+	    if (selectedRow == -1) {
+	        JOptionPane.showMessageDialog(this, "Vui lòng chọn một vai trò để quản lý quyền.");
+	        return;
+	    }
+	
+	    // Lấy thông tin vai trò đã chọn từ danh sách
+	    VaiTro selectedVaiTro = dataList.get(selectedRow);
+	
+	    // Tạo đối tượng QuyenDAO để tương tác với cơ sở dữ liệu
+	    QuyenDAO quyenDAO = new QuyenDAO(DatabaseConnection.getConnection());
+	
+	    // Lấy tất cả các quyền từ cơ sở dữ liệu
+	    List<Quyen> allPermissions = quyenDAO.getAllQuyen();
+	    List<Quyen> selectedPermissions = quyenDAO.getPermissionsByVaiTroId(selectedVaiTro.getId());
+	
+	    // Tạo khung hiển thị
+	    JDialog dialog = new JDialog(this, "Quản lý Quyền Vai Trò", true);
+	    dialog.setSize(800, 500);
+	    dialog.setLocationRelativeTo(this);
+	
+	    // Sử dụng JScrollPane để hiển thị danh sách checkbox
+	    JPanel panel = new JPanel(new GridLayout(0, 2, 10, 10)); // Hiển thị hai cột
+	    Map<Integer, JCheckBox> checkBoxMap = new HashMap<>();
+	
+	    for (Quyen permission : allPermissions) {
+	        JCheckBox checkBox = new JCheckBox(permission.getTenQuyen());
+	        boolean isSelected = selectedPermissions.stream().anyMatch(p -> p.getId() == permission.getId());
+	        checkBox.setSelected(isSelected);
+	
+	        checkBoxMap.put(permission.getId(), checkBox);
+	        panel.add(checkBox);
+	    }
+	
+	    JScrollPane scrollPane = new JScrollPane(panel);
+	    dialog.add(scrollPane, BorderLayout.CENTER);
+	
+	    // Thêm nút Lưu và Hủy
+	    JPanel buttonPanel = new JPanel();
+	    JButton saveButton = new JButton("Lưu");
+	    JButton cancelButton = new JButton("Hủy");
+	
+	    saveButton.addActionListener(e -> {
+	        List<Integer> selectedPermissionIds = new ArrayList<>();
+	        for (Map.Entry<Integer, JCheckBox> entry : checkBoxMap.entrySet()) {
+	            if (entry.getValue().isSelected()) {
+	                selectedPermissionIds.add(entry.getKey());
+	            }
+	        }
+	
+	        boolean success = quyenDAO.updatePermissionsForVaiTro(selectedVaiTro.getId(), selectedPermissionIds);
+	        if (success) {
+	            JOptionPane.showMessageDialog(dialog, "Cập nhật quyền thành công.");
+	        } else {
+	            JOptionPane.showMessageDialog(dialog, "Cập nhật quyền thất bại.");
+	        }
+	        dialog.dispose();
+	    });
+	
+	    cancelButton.addActionListener(e -> dialog.dispose());
+	
+	    buttonPanel.add(saveButton);
+	    buttonPanel.add(cancelButton);
+	    dialog.add(buttonPanel, BorderLayout.SOUTH);
+	
+	    // Hiển thị hộp thoại
+	    dialog.setVisible(true);
+	}
+	
+	public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new QL_VaiTro());
     }
 }
