@@ -20,11 +20,16 @@ public class QL_Day extends JFrame {
     private final int rowsPerPage = 10;
     private int totalRows = 0;
 
-    public QL_Day() {
+public QL_Day() {
     setTitle("Quản Lý Dãy Phòng");
     setSize(700, 500);
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setLocationRelativeTo(null);
+
+    // ======= LABEL TIÊU ĐỀ =======
+    JLabel lblTitle = new JLabel("Quản Lý Dãy Phòng");
+    lblTitle.setFont(new Font("Arial", Font.BOLD, 20));
+    lblTitle.setHorizontalAlignment(SwingConstants.CENTER); // Căn giữa tiêu đề
 
     // ======= PANEL HEADER =======
     JPanel panelHeader = new JPanel(new BorderLayout());
@@ -53,7 +58,7 @@ public class QL_Day extends JFrame {
     JScrollPane tableScrollPane = new JScrollPane(table);
 
     // ======= PANEL PHÂN TRANG =======
-    JPanel panelPagination = new JPanel(new FlowLayout(FlowLayout.CENTER));
+    JPanel panelPagination = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     btnFirst = new JButton("<<");
     btnPrev = new JButton("<");
     btnNext = new JButton(">");
@@ -67,10 +72,19 @@ public class QL_Day extends JFrame {
     panelPagination.add(btnLast);
 
     // ======= MAIN LAYOUT =======
+ // ======= MAIN LAYOUT =======
     setLayout(new BorderLayout(5, 5));
-    add(panelHeader, BorderLayout.NORTH);
-    add(tableScrollPane, BorderLayout.CENTER);
-    add(panelPagination, BorderLayout.SOUTH);
+    add(lblTitle, BorderLayout.NORTH); // Thêm tiêu đề lên trên cùng
+
+    // Tạo một JPanel phụ để chứa cả panelHeader và tableScrollPane
+    JPanel centerPanel = new JPanel();
+    centerPanel.setLayout(new BorderLayout(5, 5));
+    centerPanel.add(panelHeader, BorderLayout.NORTH); // Thêm header vào trên cùng của centerPanel
+    centerPanel.add(tableScrollPane, BorderLayout.CENTER); // Thêm bảng vào giữa của centerPanel
+
+    add(centerPanel, BorderLayout.CENTER); // Thêm centerPanel vào CENTER của giao diện chính
+    add(panelPagination, BorderLayout.SOUTH); // Thêm phân trang vào phía dưới
+
 
     // ======= Kết nối Database và tải dữ liệu =======
     connectDatabase(); // Kết nối database
@@ -93,6 +107,8 @@ public class QL_Day extends JFrame {
     btnLast.addActionListener(e -> loadTableData(getTotalPages()));
 }
 
+    
+    
     // ======= Kết nối Database =======
     private void connectDatabase() {
         try {
