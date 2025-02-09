@@ -7,7 +7,7 @@ import java.awt.event.*;
 import java.sql.*;
 import java.util.ArrayList;
 
-public class QL_PhongHoc extends JFrame {
+public class QL_Phong extends JFrame {
     private JTextField txtName, txtMoTa, txtSoLuongSV, txtTimKiem;
     private JComboBox<ComboItem> cmbIdDayPhong, cmbIdHangPhong;
     private JComboBox<String> cmbTrangThai;
@@ -18,7 +18,7 @@ public class QL_PhongHoc extends JFrame {
     private int currentPage = 1;
     private int rowsPerPage = 10;
 
- public QL_PhongHoc() {
+ public QL_Phong() {
         setTitle("Quản Lý Phòng");
         setSize(800, 500);
         setLocationRelativeTo(null);
@@ -27,7 +27,7 @@ public class QL_PhongHoc extends JFrame {
 
         // ======= PANEL HEADER =======
         JPanel panelHeader = new JPanel(new BorderLayout());
-        JLabel titleLabel = new JLabel("Quản lý danh sách Phòng học", JLabel.CENTER);
+        JLabel titleLabel = new JLabel("Quản lý danh sách Phòng Ký túc xá", JLabel.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
         // Add margin-bottom to title
@@ -445,6 +445,6 @@ public class QL_PhongHoc extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new QL_PhongHoc().setVisible(true));
+        SwingUtilities.invokeLater(() -> new QL_Phong().setVisible(true));
     }
 }
